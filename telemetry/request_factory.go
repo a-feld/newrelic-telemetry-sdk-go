@@ -17,7 +17,7 @@ type PayloadEntry interface {
 }
 
 type RequestFactory interface {
-	BuildRequest([]PayloadEntry, ...ClientOption) (http.Request, error)
+	BuildRequest([]PayloadEntry, ...ClientOption) (*http.Request, error)
 }
 
 type requestFactory struct {
@@ -40,7 +40,7 @@ func configure(f *requestFactory, options []ClientOption) error {
 
 }
 
-func (f *requestFactory) BuildRequest(entries []PayloadEntry, options ...ClientOption) (http.Request, error) {
+func (f *requestFactory) BuildRequest(entries []PayloadEntry, options ...ClientOption) (*http.Request, error) {
 	configuredFactory := &requestFactory{
 		insertKey:    f.insertKey,
 		noDefaultKey: f.noDefaultKey,
@@ -52,7 +52,7 @@ func (f *requestFactory) BuildRequest(entries []PayloadEntry, options ...ClientO
 	err := configure(configuredFactory, options)
 
 	if err != nil {
-		return http.Request{}, errors.New("unable to configure this request based on options passed in")
+		return &http.Request{}, errors.New("unable to configure this request based on options passed in")
 	}
 
 	buf := &bytes.Buffer{}
@@ -67,7 +67,7 @@ func (f *requestFactory) BuildRequest(entries []PayloadEntry, options ...ClientO
 
 	buf, err = internal.Compress(buf.Bytes())
 	if err != nil {
-		return http.Request{}, err
+		return &http.Request{}, err
 	}
 
 	getBody := func() (io.ReadCloser, error){
@@ -79,7 +79,7 @@ func (f *requestFactory) BuildRequest(entries []PayloadEntry, options ...ClientO
 	host := configuredFactory.host
 	headers := configuredFactory.getHeaders()
 
-	return http.Request{
+	return &http.Request{
 		Method: "POST",
 		URL: &url.URL{
 			Scheme: "https",
